@@ -67,15 +67,23 @@ class Image extends \yii\db\ActiveRecord
 
         $origin = $this->getPathToOrigin();
 
-        $filePath = $base.DIRECTORY_SEPARATOR.
-            $sub.DIRECTORY_SEPARATOR.$this->urlAlias.$urlSize.'.'.pathinfo($origin, PATHINFO_EXTENSION);;
-        if(!file_exists($filePath)){
-            $this->createVersion($origin, $size);
+        $sizes = $this->getSizes();
+        if ($sizes['width']>850) {
 
+            $filePath = $base.DIRECTORY_SEPARATOR.
+                $sub.DIRECTORY_SEPARATOR.$this->urlAlias.$urlSize.'.'.pathinfo($origin, PATHINFO_EXTENSION);;
             if(!file_exists($filePath)){
-                throw new \Exception('Problem with image creating.');
+                $this->createVersion($origin, $size);
+
+                if(!file_exists($filePath)){
+                    throw new \Exception('Problem with image creating.');
+                }
             }
+
+        } else {
+            $filePath = $origin;
         }
+
 
         return $filePath;
     }
