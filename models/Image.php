@@ -10,6 +10,8 @@
  * @property integer $isMain
  * @property string $modelName
  * @property string $urlAlias
+ * @property integer $height
+ * @property integer $width
  */
 
 namespace rico\yii2images\models;
@@ -60,7 +62,9 @@ class Image extends \yii\db\ActiveRecord
         return $url;
     }
 
-    public function getPath($size = false){
+    public function getPath($size = false, $thumb = true){
+        \Yii::beginProfile('Image->getPath', 'Yii2-images');
+
         $urlSize = ($size) ? '_'.$size : '';
         $base = $this->getModule()->getCachePath();
         $sub = $this->getSubDur();
@@ -68,7 +72,12 @@ class Image extends \yii\db\ActiveRecord
         $origin = $this->getPathToOrigin();
 
         $sizes = $this->getSizes();
-        if ($sizes['width']>850) {
+        $parse_sizes = $this->getModule()->parseSize($size);
+        if (
+            (isset($parse_sizes['width']) && $sizes['width'] > $parse_sizes['width'])
+            || (isset($parse_sizes['height']) && $sizes['height'] > $parse_sizes['height'])
+            || $thumb
+        ) {
 
             $filePath = $base.DIRECTORY_SEPARATOR.
                 $sub.DIRECTORY_SEPARATOR.$this->urlAlias.$urlSize.'.'.pathinfo($origin, PATHINFO_EXTENSION);;
@@ -84,7 +93,7 @@ class Image extends \yii\db\ActiveRecord
             $filePath = $origin;
         }
 
-
+        \Yii::endProfile('Image->getPath', 'Yii2-images');
         return $filePath;
     }
 
@@ -109,9 +118,15 @@ class Image extends \yii\db\ActiveRecord
             $image = new \Imagick($this->getPathToOrigin());
             $sizes = $image->getImageGeometry();
         }else{
-            $image = new \abeautifulsite\SimpleImage($this->getPathToOrigin());
-            $sizes['width'] = $image->get_width();
-            $sizes['height'] = $image->get_height();
+            if (isset($this->height) || isset($this->width)) {
+                $sizes['width'] = $this->width;
+                $sizes['height'] = $this->height;
+            } else {
+                $image = new \abeautifulsite\SimpleImage($this->getPathToOrigin());
+                $this->width = $sizes['width'] = $image->get_width();
+                $this->height = $sizes['height'] = $image->get_height();
+            }
+
         }
 
         return $sizes;
