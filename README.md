@@ -83,7 +83,7 @@ Details
     $model->attachImage($absolutePathToImage, true); //will attach image and make it main
     
     foreach($model->getImages() as $img){
-        if($img->id == $ourId){
+        if($img->getPrimaryKey() == $ourId){
             $model->setMainImage($img);//will set current image main
         }
     }
@@ -92,6 +92,7 @@ Details
 4. Get image sizes
     ```php
     $image = $model->getImage();
+    $sizes = $image->getSizes(); // Array. Original image sizes
     $sizes = $image->getSizesWhen('x500');
     echo '&lt;img width="'.$sizes['width'].'" height="'.$sizes['height'].'" src="'.$image->getUrl('x500').'" />';
     ```
@@ -134,6 +135,7 @@ Installation
                 'imagesCachePath' => 'images/cache', //path to resized copies
                 'graphicsLibrary' => 'GD', //but really its better to use 'Imagick' 
                 'placeHolderPath' => '@webroot/images/placeHolder.png', // if you want to get placeholder when image not exists, string will be processed by Yii::getAlias
+                'imageCompressionQuality' => 100, // Optional. Default value is 85.
             ],
         ],
     ```

@@ -54,7 +54,7 @@ class Image extends \yii\db\ActiveRecord
     public function getUrl($size = false){
         $urlSize = ($size) ? '_'.$size : '';
         $url = Url::toRoute([
-            '/'.$this->getModule()->id.'/images/image-by-item-and-alias',
+            '/'.$this->getPrimaryKey().'/images/image-by-item-and-alias',
             'item' => $this->modelName.$this->itemId,
             'dirtyAlias' =>  $this->urlAlias.$urlSize.'.'.$this->getExtension()
         ]);
@@ -188,7 +188,8 @@ class Image extends \yii\db\ActiveRecord
 
             if($this->getModule()->graphicsLibrary == 'Imagick'){
                 $image = new \Imagick($imagePath);
-                $image->setImageCompressionQuality(100);
+
+                $image->setImageCompressionQuality( $this->getModule()->imageCompressionQuality );
 
                 if($size){
                     if($size['height'] && $size['width']){
@@ -206,8 +207,6 @@ class Image extends \yii\db\ActiveRecord
             }else{
 
                 $image = new \abeautifulsite\SimpleImage($imagePath);
-
-
 
                 if($size){
                     if($size['height'] && $size['width']){
@@ -237,7 +236,6 @@ class Image extends \yii\db\ActiveRecord
                     $waterMark = new \abeautifulsite\SimpleImage($waterMarkPath);
 
 
-
                     if(
                         $waterMark->get_height() > $wmMaxHeight
                         or
@@ -264,7 +262,7 @@ class Image extends \yii\db\ActiveRecord
 
                 }
 
-                $image->save($pathToSave, 100);
+                $image->save($pathToSave, $this->getModule()->imageCompressionQuality );
             }
 
         return $image;
@@ -280,6 +278,12 @@ class Image extends \yii\db\ActiveRecord
         }
 
     }
+
+
+    public function getMimeType($size = false) {
+        return image_type_to_mime_type ( exif_imagetype( $this->getPath($size) ) );
+    }
+
 
     protected function getSubDur(){
         return \yii\helpers\Inflector::pluralize($this->modelName).'/'.$this->modelName.$this->itemId;
